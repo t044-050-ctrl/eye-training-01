@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まちがいさがし</title>
-    <meta property="og:title" content="まちがいさがし">
-    <meta property="og:description" content="注意力を鍛えるまちがいさがしアプリです。">
-    <meta property="og:type" content="website">
+    <title>見る力をつけよう - こども観察力トレーニング</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: M PLUS Rounded 1c -->
@@ -84,6 +81,7 @@
             <div class="flex items-center gap-2 shrink-0">
                 <!-- Card Count Switcher -->
                 <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex text-[11px] font-bold">
+                    <button id="btn4" onclick="setCardCount(4)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">4まい</button>
                     <button id="btn9" onclick="setCardCount(9)" class="px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow">9まい</button>
                     <button id="btn12" onclick="setCardCount(12)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">12まい</button>
                 </div>
@@ -280,12 +278,13 @@
 
         function setCardCount(count) {
             cardCount = count;
-            document.getElementById('btn9').className = count === 9 
-                ? 'px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow' 
-                : 'px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white';
-            document.getElementById('btn12').className = count === 12 
-                ? 'px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow' 
-                : 'px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white';
+            ['btn4', 'btn9', 'btn12'].forEach(id => {
+                const btn = document.getElementById(id);
+                const selected = Number(id.replace('btn', '')) === count;
+                btn.className = selected
+                    ? 'px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow'
+                    : 'px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white';
+            });
             generateGame();
         }
 
@@ -505,7 +504,9 @@
             const grid = document.getElementById('cardsGrid');
             grid.innerHTML = '';
 
-            if (cardCount === 12) {
+            if (cardCount === 4) {
+                grid.className = "h-full w-full grid grid-cols-2 grid-rows-2 gap-2 sm:gap-3";
+            } else if (cardCount === 12) {
                 grid.className = "h-full w-full grid grid-cols-4 grid-rows-3 gap-1.5 sm:gap-2";
             } else {
                 grid.className = "h-full w-full grid grid-cols-3 grid-rows-3 gap-1.5 sm:gap-2";
@@ -537,7 +538,7 @@
             }
 
             const shuffledVars = shuffleArray(uniqueVars);
-            const requiredDifferences = cardCount - 2; // 9枚なら7種類、12枚なら10種類
+            const requiredDifferences = cardCount - 2; // 4枚なら2種類、9枚なら7種類、12枚なら10種類
             if (shuffledVars.length < requiredDifferences) {
                 console.error(`このテーマで重複なしに用意できる絵が不足しています: ${activeTheme}。必要=${requiredDifferences}、利用可能=${shuffledVars.length}`);
             }
@@ -552,7 +553,7 @@
                     <span>1 もとのえ</span>
                 </div>
                 <div class="p-1 bg-sky-50/50 flex-1 flex items-center justify-center overflow-hidden">
-                    <div class="w-full h-full max-w-[150px] max-h-[150px] aspect-square flex items-center justify-center">
+                    <div class="w-full h-full ${cardCount === 4 ? 'max-w-[min(42vh,42vw)] max-h-[min(42vh,42vw)]' : 'max-w-[150px] max-h-[150px]'} aspect-square flex items-center justify-center">
                         ${drawIllustration(activeTheme, { isOriginal: true })}
                     </div>
                 </div>
@@ -598,7 +599,7 @@
                     </div>
 
                     <div class="p-1 pt-4 bg-white flex-1 flex items-center justify-center overflow-hidden" onclick="handleCardClick(event, ${cardNum})">
-                        <div id="img-container-${cardNum}" class="w-full h-full max-w-[150px] max-h-[150px] aspect-square flex items-center justify-center relative">
+                        <div id="img-container-${cardNum}" class="w-full h-full ${cardCount === 4 ? 'max-w-[min(42vh,42vw)] max-h-[min(42vh,42vw)]' : 'max-w-[150px] max-h-[150px]'} aspect-square flex items-center justify-center relative">
                             ${drawIllustration(activeTheme, diffConfig, false)}
                         </div>
                     </div>
