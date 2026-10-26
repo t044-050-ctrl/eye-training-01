@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>まちがいさがし</title>
-    <meta property="og:title" content="まちがいさがし">
-    <meta property="og:description" content="注意力を鍛えるまちがいさがしアプリです。">
-    <meta property="og:type" content="website">
+    <title>見る力をつけよう - こども観察力トレーニング</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: M PLUS Rounded 1c -->
@@ -327,7 +324,6 @@
                 { diffType: 'parent_fin', spot: { cx: 95, cy: 88, r: 16 } },
                 { diffType: 'parent_tail', spot: { cx: 30, cy: 135, r: 18 } },
                 { diffType: 'ball_stripe', spot: { cx: 150, cy: 80, r: 18 } },
-                { diffType: 'sea_color', spot: { cx: 100, cy: 160, r: 25 } },
                 { diffType: 'sun_rays', spot: { cx: 168, cy: 36, r: 22 } },
                 { diffType: 'bubble_mid', spot: { cx: 124, cy: 50, r: 15 } },
                 { diffType: 'parent_belly', spot: { cx: 95, cy: 125, r: 18 } },
@@ -367,7 +363,7 @@
                 { diffType: 'crown_color', spot: { cx: 100, cy: 64, r: 24 } },
                 { diffType: 'mouth_open', spot: { cx: 100, cy: 124, r: 18 } },
                 { diffType: 'no_leaves', spot: { cx: 20, cy: 30, r: 24 } },
-                { diffType: 'eye_wink', spot: { cx: 84, cy: 104, r: 15 } },
+                { diffType: 'eye_wink', spot: { cx: 116, cy: 104, r: 12 } },
                 { diffType: 'blush_star', spot: { cx: 76, cy: 114, r: 14 } },
                 { diffType: 'nose_color', spot: { cx: 100, cy: 114, r: 14 } },
                 { diffType: 'ear_color', spot: { cx: 70, cy: 82, r: 16 } },
@@ -525,10 +521,7 @@
             const seenSvg = new Set([originalSvg]);
             const seenDiffTypes = new Set();
             const uniqueVars = [];
-            const orderedTypes = [
-                ...preferredTypes,
-                ...rawVars.map(item => item.diffType)
-            ];
+            const orderedTypes = [...preferredTypes];
             for (const type of orderedTypes) {
                 if (seenDiffTypes.has(type)) continue;
                 const item = rawVars.find(v => v.diffType === type);
