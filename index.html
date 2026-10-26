@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まちがいさがし</title>
-    <meta property="og:title" content="まちがいさがし">
-    <meta property="og:description" content="注意力を鍛えるまちがいさがしアプリです。">
-    <meta property="og:type" content="website">
+    <title>見る力をつけよう - こども観察力トレーニング</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: M PLUS Rounded 1c -->
@@ -315,6 +312,10 @@
         const themeVariations = {
             dolphin: [
                 { diffType: 'parent_color', spot: { cx: 85, cy: 110, r: 25 } },
+                { diffType: 'parent_fin_up', spot: { cx: 96, cy: 83, r: 20 } },
+                { diffType: 'parent_fin_down', spot: { cx: 98, cy: 101, r: 20 } },
+                { diffType: 'parent_fin_left', spot: { cx: 84, cy: 91, r: 20 } },
+                { diffType: 'parent_fin_right', spot: { cx: 105, cy: 88, r: 20 } },
                 { diffType: 'parent_eye', spot: { cx: 128, cy: 104, r: 15 } },
                 { diffType: 'bubble_top', spot: { cx: 132, cy: 38, r: 15 } },
                 { diffType: 'ball_color', spot: { cx: 150, cy: 80, r: 18 } },
@@ -491,6 +492,9 @@
             ]
         };
 
+        // 目で見て分かりやすい違いを優先し、同じ見た目に見える微妙な差は出題候補から外す。
+        const visibleVariationTypes = {"dolphin": ["parent_fin_up", "parent_fin_down", "parent_fin_left", "parent_fin_right", "parent_tail", "bubble_top", "no_ball", "sun_rays", "child_fin", "bubble_low", "parent_mouth"], "elephant": ["no_balloon3", "no_hat", "trunk_shape", "eye_shape", "balloon_string", "cloud_left", "hat_pom", "tail_present", "belly_color", "balloon_spotted", "apple_trunk"], "lion": ["crown_gem", "mouth_open", "no_leaves", "eye_wink", "blush_star", "crown_shape", "mane_size", "whisker", "leaf_right", "crown_side_gems", "teeth_show"], "astronaut": ["flag_icon", "no_stars", "moon_crater", "suit_stripe", "rocket_flame", "star_big", "helmet_antenna", "earth_bg", "moon_shape", "planet_ring", "antenna_light"], "owl": ["no_chest", "eye_pupil", "branch_leaves", "moon_face", "ear_tufts", "star_night", "wing_pose", "sleeping", "bow_tie", "tail_feather", "nest_apple"], "train": ["smoke_few", "no_rainbow", "window_light", "chimney_shape", "smoke_shape", "headlight", "engine_front", "driver_hat", "wheel_count", "track_flowers", "bird_flying"], "bees": ["bee_single", "stem_leaf", "bee_stripes", "bee_wing", "flower_face", "bee_crown", "honey_drop", "ladybug", "bee2_position", "petal_count", "butterfly"], "cat_dog": ["accessory_bone", "dog_ears", "cat_eyes", "no_accessory", "cat_whiskers", "dog_tongue", "heart_between", "cat_stripes", "dog_spot", "ball_toy", "cat_bell"]};
+
         function generateGame() {
             foundCards.clear();
             activeCardConfigs = {};
@@ -510,7 +514,34 @@
             correctIndex = Math.floor(Math.random() * totalSelectableCards) + 2;
 
             const rawVars = themeVariations[activeTheme] || themeVariations['dolphin'];
-            const shuffledVars = shuffleArray(rawVars);
+            const preferredTypes = visibleVariationTypes[activeTheme] || visibleVariationTypes.dolphin;
+            const originalSvg = drawIllustration(activeTheme, { isOriginal: true }, false);
+
+            // 描画結果そのものを基準に重複を判定する。diffType名が違っても、
+            // 実際のSVGが同じなら採用しない。元絵と同じ描画結果も除外する。
+            const seenSvg = new Set([originalSvg]);
+            const seenDiffTypes = new Set();
+            const uniqueVars = [];
+            const orderedTypes = [
+                ...preferredTypes,
+                ...rawVars.map(item => item.diffType)
+            ];
+            for (const type of orderedTypes) {
+                if (seenDiffTypes.has(type)) continue;
+                const item = rawVars.find(v => v.diffType === type);
+                if (!item) continue;
+                const rendered = drawIllustration(activeTheme, { isOriginal: false, diffType: item.diffType }, false);
+                if (seenSvg.has(rendered)) continue;
+                seenDiffTypes.add(type);
+                seenSvg.add(rendered);
+                uniqueVars.push(item);
+            }
+
+            const shuffledVars = shuffleArray(uniqueVars);
+            const requiredDifferences = cardCount - 2; // 9枚なら7種類、12枚なら10種類
+            if (shuffledVars.length < requiredDifferences) {
+                console.error(`このテーマで重複なしに用意できる絵が不足しています: ${activeTheme}。必要=${requiredDifferences}、利用可能=${shuffledVars.length}`);
+            }
 
             // 1. Target Card
             activeCardConfigs[1] = { isOriginal: true };
@@ -541,13 +572,19 @@
                 if (isCorrect) {
                     diffConfig = { isOriginal: true };
                 } else {
-                    const item = shuffledVars[varIdx % shuffledVars.length];
+                    const item = shuffledVars[varIdx];
                     varIdx++;
-                    diffConfig = {
-                        isOriginal: false,
-                        diffType: item.diffType,
-                        spot: item.spot
-                    };
+                    // 重複候補を再利用しない。候補不足時も元絵を複製せず、明示的なエラー表示用に保護する。
+                    if (!item) {
+                        // 候補不足時も元絵を複製しない。カード番号ごとに異なる位置・形の目印を描く。
+                        diffConfig = { isOriginal: false, diffType: '__missing_variation__', fallbackIndex: cardNum, spot: { cx: 35 + ((cardNum * 29) % 130), cy: 35 + ((cardNum * 41) % 130), r: 22 } };
+                    } else {
+                        diffConfig = {
+                            isOriginal: false,
+                            diffType: item.diffType,
+                            spot: item.spot
+                        };
+                    }
                 }
 
                 activeCardConfigs[cardNum] = diffConfig;
@@ -702,6 +739,21 @@
                 default: svg += renderDolphin(isOriginal, diffType);
             }
 
+            if (!isOriginal && diffType === '__missing_variation__') {
+                // 通常は十分な候補がある想定。候補不足時も、カードごとに違う位置・形で
+                // はっきりした目印を描き、元絵や他の不足カードをそのまま複製しない。
+                const idx = Number(config.fallbackIndex || 2);
+                const x = 35 + ((idx * 29) % 130);
+                const y = 35 + ((idx * 41) % 130);
+                const shapes = [
+                    `<circle cx="${x}" cy="${y}" r="15" fill="#f43f5e" stroke="#ffffff" stroke-width="3"/>`,
+                    `<rect x="${x-13}" y="${y-13}" width="26" height="26" rx="3" fill="#2563eb" stroke="#ffffff" stroke-width="3"/>`,
+                    `<path d="M${x} ${y-17} L${x+16} ${y+13} L${x-16} ${y+13} Z" fill="#16a34a" stroke="#ffffff" stroke-width="3"/>`,
+                    `<path d="M${x} ${y-18} L${x+5} ${y-5} L${x+19} ${y-5} L${x+8} ${y+4} L${x+12} ${y+18} L${x} ${y+9} L${x-12} ${y+18} L${x-8} ${y+4} L${x-19} ${y-5} L${x-5} ${y-5} Z" fill="#f59e0b" stroke="#ffffff" stroke-width="3"/>`
+                ];
+                svg += shapes[(idx - 2) % shapes.length];
+            }
+
             if (showRedCircle && !isOriginal && config.spot) {
                 const sp = config.spot;
                 svg += `
@@ -723,6 +775,7 @@
             let parentEye = "happy", ballColor = "#f43f5e", sunColor = "#fbbf24";
             let bubbleTop = "circle", bubbleMid = "#ffffff", bubbleLow = "circle";
             let finColor = parentColor1, tailColor = parentColor1, ballStyle = "stripe";
+            let parentFinPath = "M 88 95 C 92 78 106 80 102 98 Z";
             let seaGrad = ["#38bdf8", "#0284c7"], sunRays = false, parentBelly = "#f0f9ff";
             let parentBlush = true, childEye = "normal", parentMouth = "closed";
             let skyGrad = ["#e0f2fe", "#bae6fd"], childFin = true, ballType = "ball";
@@ -736,6 +789,10 @@
                     case 'sun_color': sunColor = "#f97316"; break;
                     case 'child_color': childColor = "#f472b6"; break;
                     case 'parent_fin': finColor = "#f59e0b"; break;
+                    case 'parent_fin_up': parentFinPath = "M 88 95 C 86 65 108 65 102 98 Z"; break;
+                    case 'parent_fin_down': parentFinPath = "M 88 95 C 95 112 112 108 102 98 Z"; break;
+                    case 'parent_fin_left': parentFinPath = "M 88 95 C 68 80 70 101 102 98 Z"; break;
+                    case 'parent_fin_right': parentFinPath = "M 88 95 C 106 74 120 86 102 98 Z"; break;
                     case 'parent_tail': tailColor = "#ec4899"; break;
                     case 'ball_stripe': ballStyle = "dots"; break;
                     case 'sea_color': seaGrad = ["#1e3a8a", "#0f172a"]; break;
@@ -788,8 +845,11 @@
             <g filter="url(#shadow)">
                 <path d="M 35 130 C 45 85 110 75 145 102 C 158 112 150 126 132 124 C 98 122 65 138 35 130 Z" fill="url(#dolphGrad)" stroke="#0369a1" stroke-width="2"/>
                 <path d="M 58 126 C 85 118 120 120 132 122 C 120 129 90 132 58 126 Z" fill="${parentBelly}"/>
-                <path d="M 36 128 C 20 122 15 138 24 142 C 32 144 40 134 42 129 Z" fill="${tailColor}" stroke="#0369a1" stroke-width="2"/>
-                <path d="M 88 95 C 92 78 106 80 102 98 Z" fill="${finColor}" stroke="#0369a1" stroke-width="1.5"/>
+                ${diffType === 'parent_tail' ? `
+                    <path d="M 39 126 C 20 112 4 126 10 140 C 16 154 32 148 43 128 Z" fill="#ec4899" stroke="#9d174d" stroke-width="2.5"/>
+                    <path d="M 15 132 L 29 139" stroke="#fce7f3" stroke-width="2.5" stroke-linecap="round"/>
+                ` : `<path d="M 36 128 C 20 122 15 138 24 142 C 32 144 40 134 42 129 Z" fill="${tailColor}" stroke="#0369a1" stroke-width="2"/>`}
+                <path d="${parentFinPath}" fill="${finColor}" stroke="#0369a1" stroke-width="1.5"/>
 
                 ${parentEye === 'happy' ? `
                     <circle cx="128" cy="104" r="4" fill="#0f172a"/>
