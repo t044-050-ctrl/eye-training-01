@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まちがいさがし</title>
-    <meta property="og:title" content="まちがいさがし">
-    <meta property="og:description" content="注意力を鍛えるまちがいさがしアプリです。">
-    <meta property="og:type" content="website">
+    <title>見る力をつけよう - こども観察力トレーニング</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: M PLUS Rounded 1c -->
@@ -84,8 +81,8 @@
             <div class="flex items-center gap-2 shrink-0">
                 <!-- Card Count Switcher -->
                 <div class="bg-slate-800 p-0.5 rounded-lg border border-slate-700 flex text-[11px] font-bold">
-                    <button id="btn4" onclick="setCardCount(4)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">4まい</button>
-                    <button id="btn9" onclick="setCardCount(9)" class="px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow">9まい</button>
+                    <button id="btn4" onclick="setCardCount(4)" class="px-2 py-0.5 rounded transition-all bg-sky-500 text-white shadow">4まい</button>
+                    <button id="btn9" onclick="setCardCount(9)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">9まい</button>
                     <button id="btn12" onclick="setCardCount(12)" class="px-2 py-0.5 rounded transition-all text-slate-300 hover:text-white">12まい</button>
                 </div>
                 <!-- Lap Counter Badge -->
@@ -174,7 +171,7 @@
 
         // Global Game State
         let currentThemeIndex = 0;
-        let cardCount = 9;
+        let cardCount = 4;
         let correctIndex = -1;
         let foundCards = new Set();
         let lapCount = 1;
@@ -256,7 +253,6 @@
                 }`;
                 btn.onclick = () => selectTheme(idx);
                 btn.innerHTML = `
-                    <span class="bg-slate-900/60 text-slate-100 px-1 py-0.2 rounded text-[10px]">${theme.num}</span>
                     <span class="whitespace-nowrap">${theme.symbol} ${theme.name}</span>
                 `;
                 container.appendChild(btn);
